@@ -1,0 +1,184 @@
+import React, { useState } from 'react';
+import { View, FlatList, StyleSheet, Alert } from 'react-native';
+import { Input } from '~/components/ui/input';
+import { Text } from '~/components/ui/text';
+import { Button } from '~/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '~/components/ui/collapsible';
+
+type Comment = {
+  id: string;
+  content: string;
+};
+
+type Post = {
+  id: string;
+  title: string;
+  content: string;
+  comments: Comment[];
+};
+
+export default function PostsScreen() {
+  const [posts, setPosts] = useState<Post[]>([
+    {
+      id: '1',
+      title: 'Meu primeiro post',
+      content: 'Este é o conteúdo do meu primeiro post.',
+      comments: [],
+    },
+    {
+      id: '2',
+      title: 'Um dia ensolarado',
+      content: 'Hoje está um dia lindo e ensolarado!',
+      comments: [],
+    },
+  ]);
+
+  // Estado para armazenar o comentário de cada post
+  const [newComments, setNewComments] = useState<{ [postId: string]: string }>({});
+
+  const handleAddComment = (postId: string) => {
+    const commentContent = newComments[postId]?.trim();
+    if (!commentContent) {
+      Alert.alert('Erro', 'O comentário não pode estar vazio.');
+      return;
+    }
+
+    setPosts((prevPosts) =>
+      prevPosts.map((post) =>
+        post.id === postId
+          ? {
+              ...post,
+              comments: [
+                ...post.comments,
+                { id: Date.now().toString(), content: commentContent },
+              ],
+            }
+          : post
+      )
+    );
+
+    // Limpa o comentário após adicionar
+    setNewComments((prevComments) => ({
+      ...prevComments,
+      [postId]: '',
+    }));
+  };
+
+  // Função de renderização para cada post
+  const renderPost = ({ item }: { item: Post }) => (
+    <Card style={styles.postCard}>
+      <CardHeader>
+        <CardTitle>{item.title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Text>{item.content}</Text>
+        <View style={styles.commentHeaderContainer}>
+            <Text style={styles.commentHeader}>Comentários:</Text>
+            <Text style={styles.instruction}>(Clique no comentário para mostrar os outros)</Text>
+        </View>
+
+        {item.comments.length > 0 && (
+            <Collapsible>
+                <CollapsibleTrigger>
+                <Text style={styles.comment}>
+                    - {item.comments[0].content}
+                </Text>
+                </CollapsibleTrigger>
+
+                <CollapsibleContent>
+                {item.comments.slice(1).map((comment) => (
+                    <Text key={comment.id} style={styles.comment}>
+                    - {comment.content}
+                    </Text>
+                ))}
+                </CollapsibleContent>
+            </Collapsible>
+            )}
+
+  
+  
+        {item.comments.length === 0 && (
+          <Text style={styles.noComments}>Sem comentários ainda.</Text>
+        )}
+  
+        <Input
+          placeholder="Escreva um comentário..."
+          value={newComments[item.id] || ''}
+          onChangeText={(text) =>
+            setNewComments((prevComments) => ({
+              ...prevComments,
+              [item.id]: text,
+            }))
+          }
+          style={styles.input}
+        />
+        <Button
+          style={styles.button}
+          onPress={() => handleAddComment(item.id)}
+        >
+          Comentar
+        </Button>
+      </CardContent>
+    </Card>
+  );
+  
+
+  return (
+    <View style={styles.container}>
+      <FlatList
+        data={posts}
+        keyExtractor={(item) => item.id}
+        renderItem={renderPost}
+        contentContainerStyle={styles.list}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 16,
+  },
+  list: {
+    paddingBottom: 16,
+  },
+  postCard: {
+    marginBottom: 16,
+  },
+  commentHeader: {
+    marginTop: 8,
+    fontWeight: 'bold',
+  },
+  comment: {
+    marginTop: 8,
+    paddingLeft: 8,
+  },
+  noComments: {
+    marginTop: 8,
+    fontStyle: 'italic',
+    color: '#888',
+  },
+  button: {
+    marginTop: 16,
+    paddingLeft: 8,
+    width: 300,
+    alignSelf:'center',
+  },
+  input: {
+    marginTop: 16,
+    paddingLeft: 8,
+  },
+  instruction: {
+    opacity: 0.3, 
+    fontStyle: 'italic', 
+    marginTop: 4, 
+    paddingLeft: 8,
+  },
+  commentHeaderContainer: {
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    marginBottom: 8,
+  },
+});

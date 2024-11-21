@@ -77,7 +77,6 @@ export default function LoginScreen() {
         }
         const data = await response.json();
         console.log('Registro bem-sucedido:', data);
-        // Você pode redirecionar ou mostrar uma mensagem de sucesso aqui
       } catch (error) {
         console.error('Erro ao realizar o registro:', error);
       }
